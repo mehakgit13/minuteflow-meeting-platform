@@ -8,7 +8,11 @@ import { ActionItem, MeetingDetail } from "@/lib/types";
 import { formatDuration, formatTime } from "@/lib/format";
 import { ActionItemsPanel } from "@/components/meeting/ActionItemsPanel";
 import { MediaPlayer } from "@/components/meeting/MediaPlayer";
-import { MeetingHeader } from "@/components/meeting/MeetingHeader";
+import {
+  ExportFormat,
+  MeetingHeader,
+} from "@/components/meeting/MeetingHeader";
+
 import { SummaryPanel } from "@/components/meeting/SummaryPanel";
 import { TranscriptPanel } from "@/components/meeting/TranscriptPanel";
 
@@ -181,12 +185,44 @@ export function MeetingDetailClient({ id }: { id: number }) {
     }
   }
 
-  function handleExport() {
-    const exportMarkdown = window.confirm(
-      "Click OK to export Markdown, or Cancel to export TXT.",
-    );
+  async function handleExport(format: ExportFormat) {
+    if (!meeting) return;
 
-    downloadExport(exportMarkdown ? "md" : "txt");
+    if (format === "print") {
+      window.print();
+      return;
+    }
+
+    if (format === "copy-summary") {
+      try {
+        await navigator.clipboard.writeText(
+          meeting.summary || "No summary available.",
+        );
+        setToast("Summary copied");
+      } catch {
+        setError("Unable to copy the summary.");
+      }
+      return;
+    }
+
+    if (format === "copy-transcript") {
+      const transcript = meeting.segments
+        .map(
+          (segment) =>
+            `[${formatTime(segment.start_seconds)}] ${segment.speaker}: ${segment.text}`,
+        )
+        .join("\n\n");
+
+      try {
+        await navigator.clipboard.writeText(transcript);
+        setToast("Transcript copied");
+      } catch {
+        setError("Unable to copy the transcript.");
+      }
+      return;
+    }
+
+    downloadExport(format);
   }
 
   async function copyMeetingLink() {
@@ -207,43 +243,40 @@ export function MeetingDetailClient({ id }: { id: number }) {
         ?.scrollIntoView({ behavior: "smooth", block: "start" });
     }, 50);
   }
-function buildMeetingExport(
-  format: "txt" | "md",
-) {
-  if (!meeting) return "";
 
-  const actionItems = meeting.action_items
-    .map((item) => {
-      const status = item.completed ? "x" : " ";
-      const assignee = item.assignee
-        ? ` — ${item.assignee}`
-        : "";
+  function buildMeetingExport(format: "txt" | "md") {
+    if (!meeting) return "";
 
-      return format === "md"
-        ? `- [${status}] ${item.text}${assignee}`
-        : `${item.completed ? "DONE" : "OPEN"}: ${item.text}${assignee}`;
-    })
-    .join("\n");
+    const actionItems = meeting.action_items
+      .map((item) => {
+        const status = item.completed ? "x" : " ";
+        const assignee = item.assignee
+          ? ` — ${item.assignee}`
+          : "";
 
-  const transcript = meeting.segments
-    .map(
-      (segment) =>
-        `[${formatTime(segment.start_seconds)}] ${segment.speaker}: ${segment.text}`,
-    )
-    .join("\n\n");
+        return format === "md"
+          ? `- [${status}] ${item.text}${assignee}`
+          : `${item.completed ? "DONE" : "OPEN"}: ${item.text}${assignee}`;
+      })
+      .join("\n");
 
-  if (format === "md") {
-    return `# ${meeting.title}
+    const transcript = meeting.segments
+      .map(
+        (segment) =>
+          `[${formatTime(segment.start_seconds)}] ${segment.speaker}: ${segment.text}`,
+      )
+      .join("\n\n");
+
+    if (format === "md") {
+      return `# ${meeting.title}
 
 ## Meeting details
 
 - Date: ${meeting.meeting_date}
-- Duration: ${formatDuration(
-      meeting.duration_seconds,
-    )}
+- Duration: ${formatDuration(meeting.duration_seconds)}
 - Participants: ${meeting.participants
-      .map((person) => person.name)
-      .join(", ")}
+        .map((person) => person.name)
+        .join(", ")}
 
 ## AI summary
 
@@ -263,18 +296,16 @@ ${actionItems || "No action items."}
 
 ${transcript}
 `;
-  }
+    }
 
-  return `${meeting.title}
+    return `${meeting.title}
 
 MEETING DETAILS
 Date: ${meeting.meeting_date}
-Duration: ${formatDuration(
-    meeting.duration_seconds,
-  )}
+Duration: ${formatDuration(meeting.duration_seconds)}
 Participants: ${meeting.participants
-    .map((person) => person.name)
-    .join(", ")}
+      .map((person) => person.name)
+      .join(", ")}
 
 AI SUMMARY
 ${meeting.summary}
@@ -290,39 +321,36 @@ ${actionItems || "No action items."}
 TRANSCRIPT
 ${transcript}
 `;
-}
+  }
 
-function downloadExport(
-  format: "txt" | "md",
-) {
-  if (!meeting) return;
+  function downloadExport(format: "txt" | "md") {
+    if (!meeting) return;
 
-  const content = buildMeetingExport(format);
-  const blob = new Blob([content], {
-    type:
-      format === "md"
-        ? "text/markdown;charset=utf-8"
-        : "text/plain;charset=utf-8",
-  });
+    const content = buildMeetingExport(format);
+    const blob = new Blob([content], {
+      type:
+        format === "md"
+          ? "text/markdown;charset=utf-8"
+          : "text/plain;charset=utf-8",
+    });
 
-  const url = URL.createObjectURL(blob);
-  const anchor = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
 
-  anchor.href = url;
-  anchor.download = `${meeting.title
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "")}.${format}`;
+    anchor.href = url;
+    anchor.download = `${meeting.title
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-|-$/g, "")}.${format}`;
 
-  document.body.appendChild(anchor);
-  anchor.click();
-  anchor.remove();
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
 
-  URL.revokeObjectURL(url);
-  setToast(
-    `${format.toUpperCase()} export downloaded`,
-  );
-}
+    URL.revokeObjectURL(url);
+    setToast(`${format.toUpperCase()} export downloaded`);
+  }
+
   if (loading) {
     return (
       <div className="mf-detail-loading" aria-live="polite">

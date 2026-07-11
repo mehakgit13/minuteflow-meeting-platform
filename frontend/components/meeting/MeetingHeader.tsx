@@ -1,18 +1,33 @@
+"use client";
+
 import {
   ArrowLeft,
   Check,
+  ChevronDown,
+  Copy,
   Download,
   Edit3,
+  FileText,
   Link2,
+  Printer,
   Trash2,
 } from "lucide-react";
-import { MeetingDetail } from "@/lib/types";
+import { useEffect, useRef, useState } from "react";
+
 import { initials } from "@/lib/format";
+import { MeetingDetail } from "@/lib/types";
+
+export type ExportFormat =
+  | "txt"
+  | "md"
+  | "print"
+  | "copy-summary"
+  | "copy-transcript";
 
 type Props = {
   meeting: MeetingDetail;
   onBack: () => void;
-  onExport: () => void;
+  onExport: (format: ExportFormat) => void;
   onEdit: () => void;
   onDelete: () => void;
   onCopyLink: () => void;
@@ -26,29 +41,67 @@ export function MeetingHeader({
   onDelete,
   onCopyLink,
 }: Props) {
-  const date = new Date(`${meeting.meeting_date}T00:00:00`).toLocaleDateString(
-    undefined,
-    {
-      weekday: "long",
-      month: "long",
-      day: "numeric",
-      year: "numeric",
-    },
-  );
+  const [exportOpen, setExportOpen] = useState(false);
+  const exportRef = useRef<HTMLDivElement>(null);
+
+  const date = new Date(
+    `${meeting.meeting_date}T00:00:00`,
+  ).toLocaleDateString(undefined, {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  });
+
+  useEffect(() => {
+    function onOutsideClick(event: MouseEvent) {
+      if (
+        exportRef.current &&
+        !exportRef.current.contains(event.target as Node)
+      ) {
+        setExportOpen(false);
+      }
+    }
+
+    function onEscape(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setExportOpen(false);
+      }
+    }
+
+    document.addEventListener("mousedown", onOutsideClick);
+    document.addEventListener("keydown", onEscape);
+
+    return () => {
+      document.removeEventListener("mousedown", onOutsideClick);
+      document.removeEventListener("keydown", onEscape);
+    };
+  }, []);
+
+  function chooseExport(format: ExportFormat) {
+    setExportOpen(false);
+    onExport(format);
+  }
 
   return (
-    <header className="mf-detail-header">
-      <button className="mf-back-button" type="button" onClick={onBack}>
+    <header className="mf-meeting-header">
+      <button
+        type="button"
+        className="mf-back-button"
+        onClick={onBack}
+      >
         <ArrowLeft size={17} />
         Back to meetings
       </button>
 
-      <div className="mf-detail-header-row">
-        <div className="mf-detail-heading">
-          <div className="mf-title-line">
+      <div className="mf-meeting-header-main">
+        <div className="mf-meeting-heading">
+          <div className="mf-title-row">
             <h1>{meeting.title}</h1>
-            <span className="mf-status-badge">
-              <Check size={13} /> Processed
+
+            <span className="mf-status-pill">
+              <Check size={13} />
+              Processed
             </span>
           </div>
 
@@ -60,35 +113,138 @@ export function MeetingHeader({
             {meeting.source || "Uploaded transcript"}
           </p>
 
-          <div className="mf-participant-strip">
-            <div className="mf-avatar-stack" aria-label="Meeting participants">
-              {meeting.participants.slice(0, 5).map((participant) => (
-                <span key={participant.id} title={participant.name}>
+          <div className="mf-participant-summary">
+            <div className="mf-header-avatars">
+              {meeting.participants.slice(0, 5).map((participant, index) => (
+                <span
+                  key={participant.id}
+                  style={{ zIndex: 10 - index }}
+                  title={participant.name}
+                >
                   {initials(participant.name)}
                 </span>
               ))}
+
+              {meeting.participants.length > 5 && (
+                <span className="mf-avatar-overflow">
+                  +{meeting.participants.length - 5}
+                </span>
+              )}
             </div>
-            <p>
-              {meeting.participants.map((participant) => participant.name).join(", ")}
-            </p>
+
+            <span>
+              {meeting.participants
+                .map((participant) => participant.name)
+                .join(", ")}
+            </span>
           </div>
         </div>
 
         <div className="mf-header-actions">
-          <button className="mf-button mf-button-secondary" type="button" onClick={onCopyLink}>
-            <Link2 size={16} /> Share
-          </button>
-          <button className="mf-button mf-button-secondary" type="button" onClick={onExport}>
-            <Download size={16} /> Export
-          </button>
-          <button className="mf-button mf-button-secondary" type="button" onClick={onEdit}>
-            <Edit3 size={16} /> Edit
-          </button>
           <button
-            className="mf-icon-button mf-danger-button"
             type="button"
+            className="secondary"
+            onClick={onCopyLink}
+          >
+            <Link2 size={16} />
+            Share
+          </button>
+
+          <div className="mf-export-menu" ref={exportRef}>
+            <button
+              type="button"
+              className="secondary"
+              onClick={() => setExportOpen((current) => !current)}
+              aria-expanded={exportOpen}
+              aria-haspopup="menu"
+            >
+              <Download size={16} />
+              Export
+              <ChevronDown size={14} />
+            </button>
+
+            {exportOpen && (
+              <div className="mf-export-dropdown" role="menu">
+                <button
+                  type="button"
+                  role="menuitem"
+                  onClick={() => chooseExport("txt")}
+                >
+                  <FileText size={16} />
+                  <span>
+                    <b>Export TXT</b>
+                    <small>Plain-text transcript and notes</small>
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  role="menuitem"
+                  onClick={() => chooseExport("md")}
+                >
+                  <FileText size={16} />
+                  <span>
+                    <b>Export Markdown</b>
+                    <small>Structured meeting document</small>
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  role="menuitem"
+                  onClick={() => chooseExport("print")}
+                >
+                  <Printer size={16} />
+                  <span>
+                    <b>Print / Save as PDF</b>
+                    <small>Uses the browser print dialog</small>
+                  </span>
+                </button>
+
+                <div className="mf-export-divider" />
+
+                <button
+                  type="button"
+                  role="menuitem"
+                  onClick={() => chooseExport("copy-summary")}
+                >
+                  <Copy size={16} />
+                  <span>
+                    <b>Copy summary</b>
+                    <small>Copy summary to clipboard</small>
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  role="menuitem"
+                  onClick={() => chooseExport("copy-transcript")}
+                >
+                  <Copy size={16} />
+                  <span>
+                    <b>Copy transcript</b>
+                    <small>Copy complete transcript</small>
+                  </span>
+                </button>
+              </div>
+            )}
+          </div>
+
+          <button
+            type="button"
+            className="secondary"
+            onClick={onEdit}
+          >
+            <Edit3 size={16} />
+            Edit
+          </button>
+
+          <button
+            type="button"
+            className="mf-danger-button"
             onClick={onDelete}
             aria-label="Delete meeting"
+            title="Delete meeting"
           >
             <Trash2 size={17} />
           </button>
