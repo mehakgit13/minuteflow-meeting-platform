@@ -4393,3 +4393,474 @@ body {
     color: #111827 !important;
   }
 }
+/* =========================================================
+   FIXED DESKTOP SIDEBAR
+   Keep the left navigation fixed while main content scrolls
+   ========================================================= */
+
+html,
+body {
+  overflow-x: clip;
+}
+
+.shell {
+  display: block;
+  min-height: 100dvh;
+}
+
+/* Fixed sidebar on desktop */
+.sidebar {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 50;
+
+  display: flex;
+  flex-direction: column;
+
+  width: 232px;
+  height: 100dvh;
+  padding: 22px 14px;
+
+  overflow: hidden;
+
+  background: var(--surface, #ffffff);
+  border-right: 1px solid var(--border, #e7e9ef);
+}
+
+/* Only navigation can scroll if necessary */
+.sidebar nav {
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* Always keep Settings and profile at the bottom */
+.sidebar-bottom {
+  flex: 0 0 auto;
+  margin-top: auto;
+  background: inherit;
+}
+
+/* Move application content beside fixed sidebar */
+.shell > main {
+  width: calc(100% - 232px);
+  min-width: 0;
+  min-height: 100dvh;
+  margin-left: 232px;
+}
+
+/* Main header remains visible while scrolling */
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+}
+
+/* Mobile/tablet sidebar remains a drawer */
+@media (max-width: 900px) {
+  .shell > main {
+    width: 100%;
+    margin-left: 0;
+  }
+
+  .sidebar {
+    width: min(320px, 86vw);
+    transform: translateX(-105%);
+    transition: transform 180ms ease;
+    box-shadow: 18px 0 44px rgba(10, 14, 23, 0.22);
+  }
+
+  .sidebar.is-mobile-open {
+    transform: translateX(0);
+  }
+}
+
+/* =========================================================
+   BRAND AND WORKSPACE SWITCHER
+   ========================================================= */
+
+.brand {
+  display: flex;
+  align-items: center;
+  min-height: 46px;
+  gap: 11px;
+  padding: 0 8px;
+}
+
+.brandmark {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+
+  width: 35px;
+  height: 35px;
+
+  border-radius: 10px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #7564ef,
+      #5948d9
+    );
+
+  color: #ffffff;
+
+  box-shadow:
+    0 6px 14px
+    rgba(101, 87, 232, 0.24);
+}
+
+.brand-name {
+  color: #101828;
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+}
+
+/* Workspace */
+
+.workspace-switcher {
+  position: relative;
+  margin: 14px 0 18px;
+}
+
+.workspace {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+
+  width: 100%;
+  min-height: 40px;
+  padding: 0 11px;
+
+  border: 1px solid transparent;
+  border-radius: 10px;
+
+  background: #f2f0ff;
+  color: #5546ce;
+
+  cursor: pointer;
+
+  transition:
+    background 160ms ease,
+    border-color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.workspace > span {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+
+  min-width: 0;
+
+  font-size: 10px;
+  font-weight: 850;
+  letter-spacing: 0.015em;
+}
+
+.workspace:hover,
+.workspace.is-open {
+  border-color: #d8d2ff;
+  background: #ece8ff;
+
+  box-shadow:
+    0 5px 14px
+    rgba(70, 58, 150, 0.08);
+}
+
+.workspace-arrow {
+  flex: 0 0 auto;
+
+  transition:
+    transform 160ms ease;
+}
+
+.workspace.is-open
+.workspace-arrow {
+  transform: rotate(180deg);
+}
+
+.workspace-dropdown {
+  position: absolute;
+  top: calc(100% + 7px);
+  right: 0;
+  left: 0;
+  z-index: 90;
+
+  display: grid;
+  gap: 4px;
+
+  padding: 7px;
+
+  border: 1px solid #e2e5ec;
+  border-radius: 12px;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 18px 40px
+    rgba(20, 28, 50, 0.16);
+}
+
+.workspace-option {
+  display: grid;
+  grid-template-columns:
+    32px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 9px;
+
+  width: 100%;
+  min-height: 53px;
+  padding: 7px;
+
+  border: 0;
+  border-radius: 9px;
+
+  background: transparent;
+  color: #344054;
+
+  text-align: left;
+  cursor: pointer;
+}
+
+.workspace-option:hover:not(
+  :disabled
+) {
+  background: #f5f3ff;
+}
+
+.workspace-option.active {
+  background: #f5f3ff;
+  color: #5849d4;
+}
+
+.workspace-option:disabled {
+  cursor: default;
+  opacity: 0.58;
+}
+
+.workspace-option-icon {
+  display: grid;
+  place-items: center;
+
+  width: 32px;
+  height: 32px;
+
+  border-radius: 9px;
+
+  background: #efecff;
+  color: #5e4fd7;
+}
+
+.workspace-option > span:nth-child(2) {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+}
+
+.workspace-option b {
+  overflow: hidden;
+
+  font-size: 11px;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.workspace-option small {
+  color: #8b94a5;
+  font-size: 9px;
+}
+
+/* Improve top search appearance */
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  min-height: 64px;
+
+  border-bottom: 1px solid #e5e8ef;
+  background: #ffffff;
+}
+
+.global-search {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  width: min(430px, 48vw);
+  height: 42px;
+  padding: 0 11px;
+
+  border: 1px solid #dde2eb;
+  border-radius: 10px;
+
+  background: #ffffff;
+  color: #667085;
+
+  font: inherit;
+  text-align: left;
+
+  cursor: pointer;
+
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.global-search:hover,
+.global-search:focus-visible {
+  border-color: #aaa0ef;
+
+  box-shadow:
+    0 0 0 3px
+    rgba(101, 87, 232, 0.1);
+
+  outline: none;
+}
+
+.global-search > span {
+  flex: 1;
+  min-width: 0;
+
+  overflow: hidden;
+
+  font-size: 12px;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.global-search kbd {
+  flex: 0 0 auto;
+
+  padding: 3px 7px;
+
+  border: 1px solid #dce1e9;
+  border-radius: 6px;
+
+  background: #f8f9fb;
+  color: #7d8798;
+
+  font-size: 9px;
+  font-family: inherit;
+}
+
+.topbar-actions {
+  position: absolute;
+  right: 24px;
+
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* =========================================================
+   BRAND AND WORKSPACE — DARK THEME
+   ========================================================= */
+
+:root[data-theme="dark"]
+.brand-name {
+  color: #f4f6fb;
+}
+
+:root[data-theme="dark"]
+.brandmark {
+  background:
+    linear-gradient(
+      135deg,
+      #806ef4,
+      #604ddd
+    );
+
+  color: #ffffff;
+}
+
+:root[data-theme="dark"]
+.workspace {
+  border-color: #30394a;
+  background: #1d2432;
+  color: #c9c1ff;
+}
+
+:root[data-theme="dark"]
+.workspace:hover,
+:root[data-theme="dark"]
+.workspace.is-open {
+  border-color: #504777;
+  background: #292449;
+}
+
+:root[data-theme="dark"]
+.workspace-dropdown {
+  border-color: #30394a;
+  background: #1a202d;
+
+  box-shadow:
+    0 18px 45px
+    rgba(0, 0, 0, 0.36);
+}
+
+:root[data-theme="dark"]
+.workspace-option {
+  color: #e8ebf2;
+}
+
+:root[data-theme="dark"]
+.workspace-option:hover:not(
+  :disabled
+),
+:root[data-theme="dark"]
+.workspace-option.active {
+  background: #292449;
+  color: #cec7ff;
+}
+
+:root[data-theme="dark"]
+.workspace-option-icon {
+  background: #302957;
+  color: #cec7ff;
+}
+
+:root[data-theme="dark"]
+.workspace-option small {
+  color: #8e99ad;
+}
+
+:root[data-theme="dark"]
+.topbar {
+  border-color: #252d3c;
+  background: #121824;
+}
+
+:root[data-theme="dark"]
+.global-search {
+  border-color: #30394a;
+  background: #171d29;
+  color: #aeb7c8;
+}
+
+:root[data-theme="dark"]
+.global-search:hover,
+:root[data-theme="dark"]
+.global-search:focus-visible {
+  border-color: #675ba4;
+
+  box-shadow:
+    0 0 0 3px
+    rgba(123, 104, 238, 0.14);
+}
+
+:root[data-theme="dark"]
+.global-search kbd {
+  border-color: #394356;
+  background: #242c3b;
+  color: #aab3c4;
+}

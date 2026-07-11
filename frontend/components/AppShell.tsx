@@ -2,10 +2,11 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
 import {
   Bell,
+  Building2,
   CalendarDays,
+  Check,
   ChevronDown,
   Library,
   Menu,
@@ -13,27 +14,99 @@ import {
   Search,
   Settings,
   Sparkles,
+  UserRound,
+  UsersRound,
   X,
 } from "lucide-react";
+import {
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 
-export function AppShell({ children }: { children: React.ReactNode }) {
+export function AppShell({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const pathname = usePathname();
-  const [mobileOpen, setMobileOpen] = useState(false);
 
-  useEffect(() => setMobileOpen(false), [pathname]);
+  const workspaceRef =
+    useRef<HTMLDivElement>(null);
+
+  const [mobileOpen, setMobileOpen] =
+    useState(false);
+
+  const [workspaceOpen, setWorkspaceOpen] =
+    useState(false);
+
+  const userName =
+    process.env.NEXT_PUBLIC_USER_NAME ||
+    "Mehak Yadav";
+
+  const userEmail =
+    process.env.NEXT_PUBLIC_USER_EMAIL ||
+    "mehak.yadav.ug23@nsut.ac.in";
 
   useEffect(() => {
-    document.body.style.overflow = mobileOpen ? "hidden" : "";
+    setMobileOpen(false);
+    setWorkspaceOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    document.body.style.overflow =
+      mobileOpen ? "hidden" : "";
+
     return () => {
       document.body.style.overflow = "";
     };
   }, [mobileOpen]);
 
-  const userName =
-    process.env.NEXT_PUBLIC_USER_NAME || "Mehak Yadav";
-  const userEmail =
-    process.env.NEXT_PUBLIC_USER_EMAIL ||
-    "mehak.yadav.ug23@nsut.ac.in";
+  useEffect(() => {
+    function handleOutsideClick(
+      event: MouseEvent,
+    ) {
+      if (
+        workspaceRef.current &&
+        !workspaceRef.current.contains(
+          event.target as Node,
+        )
+      ) {
+        setWorkspaceOpen(false);
+      }
+    }
+
+    function handleEscape(
+      event: KeyboardEvent,
+    ) {
+      if (event.key === "Escape") {
+        setWorkspaceOpen(false);
+        setMobileOpen(false);
+      }
+    }
+
+    document.addEventListener(
+      "mousedown",
+      handleOutsideClick,
+    );
+
+    document.addEventListener(
+      "keydown",
+      handleEscape,
+    );
+
+    return () => {
+      document.removeEventListener(
+        "mousedown",
+        handleOutsideClick,
+      );
+
+      document.removeEventListener(
+        "keydown",
+        handleEscape,
+      );
+    };
+  }, []);
 
   return (
     <div className="shell">
@@ -42,56 +115,185 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           type="button"
           className="mobile-sidebar-backdrop"
           aria-label="Close navigation"
-          onClick={() => setMobileOpen(false)}
+          onClick={() =>
+            setMobileOpen(false)
+          }
         />
       )}
 
-      <aside className={`sidebar ${mobileOpen ? "is-mobile-open" : ""}`}>
+      <aside
+        className={`sidebar ${
+          mobileOpen
+            ? "is-mobile-open"
+            : ""
+        }`}
+      >
         <div className="brand">
           <span className="brandmark">
-            <Mic2 size={18} />
+            <Mic2 size={19} />
           </span>
-          <span>MinuteFlow</span>
+
+          <span className="brand-name">
+            MinuteFlow
+          </span>
+
           <button
             type="button"
             className="mobile-close-button"
             aria-label="Close navigation"
-            onClick={() => setMobileOpen(false)}
+            onClick={() =>
+              setMobileOpen(false)
+            }
           >
             <X size={20} />
           </button>
         </div>
 
-        <button type="button" className="workspace">
-          MY WORKSPACE <ChevronDown size={14} />
-        </button>
+        <div
+          className="workspace-switcher"
+          ref={workspaceRef}
+        >
+          <button
+            type="button"
+            className={`workspace ${
+              workspaceOpen
+                ? "is-open"
+                : ""
+            }`}
+            aria-expanded={
+              workspaceOpen
+            }
+            aria-haspopup="menu"
+            onClick={() =>
+              setWorkspaceOpen(
+                (current) => !current,
+              )
+            }
+          >
+            <span>
+              <Building2 size={15} />
+              MY WORKSPACE
+            </span>
+
+            <ChevronDown
+              size={15}
+              className="workspace-arrow"
+            />
+          </button>
+
+          {workspaceOpen && (
+            <div
+              className="workspace-dropdown"
+              role="menu"
+            >
+              <button
+                type="button"
+                className="workspace-option active"
+                role="menuitem"
+                onClick={() =>
+                  setWorkspaceOpen(false)
+                }
+              >
+                <span className="workspace-option-icon">
+                  <Building2 size={16} />
+                </span>
+
+                <span>
+                  <b>My Workspace</b>
+                  <small>
+                    Your meeting library
+                  </small>
+                </span>
+
+                <Check size={15} />
+              </button>
+
+              <button
+                type="button"
+                className="workspace-option"
+                role="menuitem"
+                disabled
+              >
+                <span className="workspace-option-icon">
+                  <UserRound size={16} />
+                </span>
+
+                <span>
+                  <b>
+                    Personal Meetings
+                  </b>
+                  <small>
+                    Coming soon
+                  </small>
+                </span>
+              </button>
+
+              <button
+                type="button"
+                className="workspace-option"
+                role="menuitem"
+                disabled
+              >
+                <span className="workspace-option-icon">
+                  <UsersRound size={16} />
+                </span>
+
+                <span>
+                  <b>Shared with me</b>
+                  <small>
+                    Coming soon
+                  </small>
+                </span>
+              </button>
+            </div>
+          )}
+        </div>
 
         <nav>
-          <Link className={pathname === "/" ? "active" : ""} href="/">
+          <Link
+            className={
+              pathname === "/"
+                ? "active"
+                : ""
+            }
+            href="/"
+          >
             <Library size={18} />
             Meetings
           </Link>
+
           <span className="nav-disabled">
             <CalendarDays size={18} />
-            Calendar <small>Soon</small>
+            Calendar
+            <small>Soon</small>
           </span>
+
           <span className="nav-disabled">
             <Sparkles size={18} />
-            AI Apps <small>Soon</small>
+            AI Apps
+            <small>Soon</small>
           </span>
         </nav>
 
         <div className="sidebar-bottom">
           <Link
-            className={pathname === "/settings" ? "active" : ""}
+            className={
+              pathname === "/settings"
+                ? "active"
+                : ""
+            }
             href="/settings"
           >
             <Settings size={18} />
             Settings
           </Link>
+
           <div className="profile">
-            <span className="avatar">MY</span>
-            <div>
+            <span className="avatar">
+              MY
+            </span>
+
+            <div className="profile-copy">
               <b>{userName}</b>
               <small>{userEmail}</small>
             </div>
@@ -106,24 +308,42 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             className="mobile-menu-button"
             aria-label="Open navigation"
             aria-expanded={mobileOpen}
-            onClick={() => setMobileOpen(true)}
+            onClick={() =>
+              setMobileOpen(true)
+            }
           >
             <Menu size={21} />
           </button>
 
-          <div className="global-search">
+          <button
+            type="button"
+            className="global-search"
+            aria-label="Search all meetings"
+          >
             <Search size={17} />
-            <span>Search all meetings</span>
-            <kbd>Ctrl K</kbd>
-          </div>
 
-          <button type="button" className="icon-btn" aria-label="Notifications">
-            <Bell size={19} />
-            <i />
+            <span>
+              Search all meetings
+            </span>
+
+            <kbd>Ctrl K</kbd>
           </button>
+
+          <div className="topbar-actions">
+            <button
+              type="button"
+              className="icon-btn"
+              aria-label="Notifications"
+            >
+              <Bell size={19} />
+              <i />
+            </button>
+          </div>
         </header>
 
-        <div className="content">{children}</div>
+        <div className="content">
+          {children}
+        </div>
       </main>
     </div>
   );
