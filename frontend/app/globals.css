@@ -4864,3 +4864,45 @@ body {
   background: #242c3b;
   color: #aab3c4;
 }
+
+/* Theme toggle */
+
+.topbar-actions {
+  position: absolute;
+  right: 24px;
+
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.theme-toggle {
+  transition:
+    background 160ms ease,
+    color 160ms ease,
+    border-color 160ms ease,
+    transform 160ms ease;
+}
+
+.theme-toggle:hover {
+  color: #5f50db;
+  transform: translateY(-1px);
+}
+
+:root[data-theme="dark"] .theme-toggle {
+  background: #1d2432;
+  color: #ffd66b;
+  border-color: #343e50;
+}
+
+:root[data-theme="dark"] .theme-toggle:hover {
+  background: #252e3e;
+  color: #ffe29a;
+}
+
+@media (max-width: 900px) {
+  .topbar-actions {
+    position: static;
+    margin-left: auto;
+  }
+}

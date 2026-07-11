@@ -10,45 +10,53 @@ export function ThemeToggle() {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    const storedTheme = localStorage.getItem(
+    const savedTheme = localStorage.getItem(
       "minuteflow-theme",
     ) as Theme | null;
 
-    const prefersDark = window.matchMedia(
-      "(prefers-color-scheme: dark)",
-    ).matches;
+    const systemPrefersDark =
+      window.matchMedia(
+        "(prefers-color-scheme: dark)",
+      ).matches;
 
     const initialTheme: Theme =
-      storedTheme || (prefersDark ? "dark" : "light");
+      savedTheme ??
+      (systemPrefersDark ? "dark" : "light");
+
+    document.documentElement.setAttribute(
+      "data-theme",
+      initialTheme,
+    );
 
     setTheme(initialTheme);
-    document.documentElement.dataset.theme =
-      initialTheme;
     setMounted(true);
   }, []);
 
   function toggleTheme() {
     const nextTheme: Theme =
-      theme === "light" ? "dark" : "light";
+      theme === "dark" ? "light" : "dark";
 
-    setTheme(nextTheme);
+    document.documentElement.setAttribute(
+      "data-theme",
+      nextTheme,
+    );
+
     localStorage.setItem(
       "minuteflow-theme",
       nextTheme,
     );
-    document.documentElement.dataset.theme =
-      nextTheme;
+
+    setTheme(nextTheme);
   }
 
   if (!mounted) {
     return (
       <button
         type="button"
-        className="icon-btn"
-        aria-label="Loading theme"
-        disabled
+        className="icon-btn theme-toggle"
+        aria-label="Toggle theme"
       >
-        <Sun size={18} />
+        <Moon size={19} />
       </button>
     );
   }
@@ -56,7 +64,7 @@ export function ThemeToggle() {
   return (
     <button
       type="button"
-      className="icon-btn"
+      className="icon-btn theme-toggle"
       onClick={toggleTheme}
       aria-label={
         theme === "dark"
@@ -65,14 +73,14 @@ export function ThemeToggle() {
       }
       title={
         theme === "dark"
-          ? "Light mode"
-          : "Dark mode"
+          ? "Switch to light mode"
+          : "Switch to dark mode"
       }
     >
       {theme === "dark" ? (
-        <Sun size={18} />
+        <Sun size={19} />
       ) : (
-        <Moon size={18} />
+        <Moon size={19} />
       )}
     </button>
   );

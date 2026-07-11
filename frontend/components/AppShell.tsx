@@ -24,6 +24,8 @@ import {
   useState,
 } from "react";
 
+import { ThemeToggle } from "./ThemeToggle";
+
 export function AppShell({
   children,
 }: {
@@ -330,15 +332,17 @@ export function AppShell({
           </button>
 
           <div className="topbar-actions">
-            <button
-              type="button"
-              className="icon-btn"
-              aria-label="Notifications"
-            >
-              <Bell size={19} />
-              <i />
-            </button>
-          </div>
+  <ThemeToggle />
+
+  <button
+    type="button"
+    className="icon-btn"
+    aria-label="Notifications"
+  >
+    <Bell size={19} />
+    <i />
+  </button>
+</div>
         </header>
 
         <div className="content">
