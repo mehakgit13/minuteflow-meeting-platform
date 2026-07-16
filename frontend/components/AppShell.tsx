@@ -26,6 +26,8 @@ import {
 
 import { ThemeToggle } from "./ThemeToggle";
 
+import { GlobalSearch } from "./GlobalSearch";
+import { NotificationBell } from "./NotificationBell";
 export function AppShell({
   children,
 }: {
@@ -317,31 +319,19 @@ export function AppShell({
             <Menu size={21} />
           </button>
 
-          <button
-            type="button"
-            className="global-search"
-            aria-label="Search all meetings"
-          >
+          <GlobalSearch />
             <Search size={17} />
 
-            <span>
-              Search all meetings
-            </span>
+            
 
-            <kbd>Ctrl K</kbd>
-          </button>
+            
+        
 
           <div className="topbar-actions">
   <ThemeToggle />
 
-  <button
-    type="button"
-    className="icon-btn"
-    aria-label="Notifications"
-  >
-    <Bell size={19} />
-    <i />
-  </button>
+ <NotificationBell />
+    
 </div>
         </header>
 
